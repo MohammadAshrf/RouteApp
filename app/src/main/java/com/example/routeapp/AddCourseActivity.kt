@@ -21,30 +21,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.routeapp.database.Course
+import com.example.routeapp.database.Courses
 import com.example.routeapp.database.MyDatabase
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class AddCourseActivity : ComponentActivity() {
 
-    private lateinit var coursesItems: List<Course>
+    private lateinit var coursesItems: List<Courses>
 
     private val addCourseLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK)
-
             coursesItems = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
     }
 
@@ -58,8 +54,8 @@ class AddCourseActivity : ComponentActivity() {
                 Log.e("PhotoPicker", "Selected URI: $uri")
             } else {
                 Log.e("PhotoPicker", "No media selected")
+            }
         }
-    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,7 +95,7 @@ fun AddCourseContent(
         topBar = {
             RouteTopAppBar(
                 navigationIcon = R.drawable.ic_arrow_back,
-                title = "Add New Course",
+                title = "Add New Courses",
                 navigationIconOnClickListener = { onNavigationClick() }
             )
         }
@@ -123,14 +119,18 @@ fun AddCourseContent(
                 mutableStateOf("")
             }
             val context = LocalContext.current
-            RouteTextFeild(lable = "Course Title", title)
+
+            RouteTextField(label = "Courses Title", title)
             Spacer(modifier = Modifier.height(8.dp))
-            RouteTextFeild("Course Description", description)
+
+            RouteTextField("Courses Description", description)
             Spacer(modifier = Modifier.height(8.dp))
-            RouteButton(title = "Select Course Image", onButtonClick = openGalleryClick)
+
+            RouteButton(title = "Select Courses Image", onButtonClick = openGalleryClick)
             Spacer(modifier = Modifier.height(8.dp))
+
             RouteButton(
-                title = "Save Course",
+                title = "Save Courses",
                 enabled = title.value.length > 2 && description.value.length > 2,
                 onButtonClick = {
                     if (validateData(
@@ -145,7 +145,7 @@ fun AddCourseContent(
                          */
                         MyDatabase.getInstance(context).getCoursesDao()
                             .insertCourse(
-                                Course(
+                                Courses(
                                     name = title.value,
                                     description = description.value
                                 )
@@ -185,13 +185,13 @@ fun validateData(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RouteTextFeild(lable: String, mutableState: MutableState<String>) {
+fun RouteTextField(label: String, mutableState: MutableState<String>) {
     OutlinedTextField(
         value = mutableState.value,
         onValueChange = {
             mutableState.value = it
         },
-        label = { Text(text = lable) }
+        label = { Text(text = label) }
     )
 }
 

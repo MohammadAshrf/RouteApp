@@ -7,8 +7,8 @@ import androidx.room.Query
 @Dao
 interface CoursesDao {
     @Insert
-    fun insertCourse(course: Course)
+    fun insertCourse(course: Courses)
 
     @Query("SELECT * FROM Courses")
-    fun getAllCourses(): List<Course>
+    fun getAllCourses(): List<Courses>
 }

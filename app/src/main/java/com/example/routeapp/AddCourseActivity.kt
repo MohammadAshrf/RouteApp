@@ -1,6 +1,7 @@
 package com.example.routeapp
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -20,8 +21,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,17 +37,30 @@ import com.example.routeapp.database.MyDatabase
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class AddCourseActivity : ComponentActivity() {
+
+    private lateinit var coursesItems: List<Course>
+
+    private val addCourseLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK)
+
+            coursesItems = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
+    }
+
     // Registers a photo picker activity launcher in single-select mode.
-    private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        //Unified Resource ID
-        // Callback is invoked after the user selects a media item or closes the
-        // photo picker.
-        if (uri != null) {
-            Log.e("PhotoPicker", "Selected URI: $uri")
-        } else {
-            Log.e("PhotoPicker", "No media selected")
+    private val pickMedia =
+        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            //Unified Resource ID
+            // Callback is invoked after the user selects a media item or closes the
+            // photo picker.
+            if (uri != null) {
+                Log.e("PhotoPicker", "Selected URI: $uri")
+            } else {
+                Log.e("PhotoPicker", "No media selected")
         }
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +73,11 @@ class AddCourseActivity : ComponentActivity() {
                     },
                     onNavigationClick = { finish() },
                     onSaveCourseClick = {
+                        addCourseLauncher.launch(
+                            Intent(
+                                this, MainActivity::class.java
+                            )
+                        )
                         finish()
                     }
                 )

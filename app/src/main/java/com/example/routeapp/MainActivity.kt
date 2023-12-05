@@ -1,7 +1,6 @@
 package com.example.routeapp
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -24,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +44,6 @@ import com.example.routeapp.ui.theme.RouteAppTheme
 
 class MainActivity : ComponentActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -52,9 +54,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    val lazyListState = rememberLazyListState()
                     MainContent(
+                        lazyListState = { lazyListState },
                         callback = {
-                            val intent = Intent(this@MainActivity, AddCourseActivity::class.java)
+                            val intent = Intent(this, AddCourseActivity::class.java)
                             startActivity(intent)
                         }
                     )
@@ -67,7 +71,7 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent(callback: () -> Unit) {
+fun MainContent(callback: () -> Unit, lazyListState: () -> LazyListState) {
     val context = LocalContext.current
     Scaffold(
         topBar = {
@@ -77,6 +81,7 @@ fun MainContent(callback: () -> Unit) {
             FloatingActionButton(
                 onClick = {
                     callback()
+                    lazyListState()
                 },
                 containerColor = colorResource(id = R.color.colorBlue),
                 contentColor = colorResource(id = R.color.white)
@@ -92,17 +97,23 @@ fun MainContent(callback: () -> Unit) {
         var coursesItems by remember {
             mutableStateOf(listOf<Course>())
         }
-        coursesItems =
-            MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
+        // Fetch initial data from the database
+        coursesItems = MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
 
-        LazyColumn(Modifier.padding(top = it.calculateTopPadding())) {
+
+        LazyColumn(
+            Modifier.padding(
+                top = it.calculateTopPadding()
+            ),
+            state = LazyListState()
+        ) {
             items(coursesItems.size) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
                             vertical = 8.dp, horizontal = 16.dp
-                        )
+                        ), shape = CardDefaults.outlinedShape
                 ) {
                     val item = coursesItems[it]
                     Text(
@@ -122,14 +133,16 @@ fun MainContent(callback: () -> Unit) {
                 }
             }
         }
+
     }
 }
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun GreetingPreview() {
     RouteAppTheme {
-        MainContent {}
+        MainContent({}, { LazyListState() })
     }
 }
 

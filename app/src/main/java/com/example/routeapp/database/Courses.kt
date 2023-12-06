@@ -9,5 +9,6 @@ data class Courses(
     var id: Int? = null,
     val name: String,
     val description: String,
+    var picture: String? = null
 
     )

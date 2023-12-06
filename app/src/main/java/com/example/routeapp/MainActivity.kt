@@ -3,8 +3,10 @@ package com.example.routeapp
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -74,6 +76,7 @@ fun MainContent(callback: () -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
+                modifier = Modifier.padding(end = 8.dp, bottom = 16.dp),
                 onClick = {
                     callback()
 //                    lazyListState()
@@ -99,7 +102,7 @@ fun MainContent(callback: () -> Unit) {
         LazyColumn(
             Modifier.padding(
                 top = it.calculateTopPadding()
-            ),
+            )
 //            state = LazyListState()
         ) {
             items(coursesItems.size) {
@@ -125,6 +128,8 @@ fun MainContent(callback: () -> Unit) {
                             .padding(vertical = 8.dp),
                         textAlign = TextAlign.Center
                     )
+                 
+
                 }
             }
         }

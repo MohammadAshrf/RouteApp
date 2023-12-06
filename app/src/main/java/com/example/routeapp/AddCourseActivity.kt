@@ -3,7 +3,6 @@ package com.example.routeapp
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -34,43 +33,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.imageLoader
+import coil.request.ImageRequest
 import com.example.routeapp.database.Courses
 import com.example.routeapp.database.MyDatabase
-import com.example.routeapp.ui.main.RouteTopAppBar
+import com.example.routeapp.ui.RouteTopAppBar
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class AddCourseActivity : ComponentActivity() {
 
-    private lateinit var coursesItems: List<Courses>
-
-
-    // Registers a photo picker activity launcher in single-select mode.
-    private val pickMedia =
-        registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            //Unified Resource ID
-            // Callback is invoked after the user selects a media item or closes the
-            // photo picker.
-            if (uri != null) {
-                Log.e("PhotoPicker", "Selected URI: $uri")
-            } else {
-                Log.e("PhotoPicker", "No media selected")
-            }
-        }
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val context = LocalContext.current
             RouteAppTheme {
                 var imagePath by remember {
                     mutableStateOf("")
                 }
+                val request = ImageRequest.Builder(context)
+                    .data(imagePath)
+                    .build()
+
+
                 val galleryLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.PickVisualMedia(),
                     onResult = {
                         if (it != null) {
                             Log.e("PhotoPicker", "Selected URI: $it")
-                            imagePath = it.toString() ?: ""
+                            imagePath = it.toString()
                         } else {
                             Log.e("PhotoPicker", "No media selected")
                         }
@@ -87,14 +77,8 @@ class AddCourseActivity : ComponentActivity() {
                     },
                     onNavigationClick = { finish() },
                     onSaveCourseClick = {
-                        // splash -> main Activity ->  add course Activity
-                        /* addCourseLauncher.launch(
-                             Intent(
-                                 this, MainActivity::class.java
-                             )
-                         )
- */
                         setResult(RESULT_OK)
+                        imageLoader.enqueue(request)
                         finish()
                     },
                     imagePath = imagePath
@@ -161,57 +145,48 @@ fun AddCourseContent(
                 title = "Save Courses",
                 enabled = title.value.length > 2 && description.value.length > 2,
                 onButtonClick = {
-                    if (validateData(
-                            title.value,
-                            titleError,
-                            description.value,
-                            descriptionError
-                        )
-                    ) {
-                        /**
-                         * Call Room DataBase to save course
-                         */
-                        MyDatabase.getInstance(context).getCoursesDao()
-                            .insertCourse(
-                                Courses(
-                                    name = title.value,
-                                    description = description.value,
-                                    picture = picture.value
-                                )
+                    /**
+                     * Call Room DataBase to save course
+                     */
+                    MyDatabase.getInstance(context).getCoursesDao()
+                        .insertCourse(
+                            Courses(
+                                name = title.value,
+                                description = description.value,
+                                picture = picture.value
                             )
+                        )
 
-                        onSaveCourseClick()
+                    onSaveCourseClick()
 
-                    } else {
-                        Toast.makeText(context, titleError.value, Toast.LENGTH_LONG).show()
-                    }
+
                 })
         }
     }
 
 }
 
-fun validateData(
-    courseTitle: String,
-    titleError: MutableState<String>,
-    courseDescription: String,
-    descriptionError: MutableState<String>
-): Boolean {
-    if (courseTitle.isEmpty() || courseTitle.isBlank() || courseTitle.length < 2) {
-        titleError.value = "Title Invalid"
-        return false
-    } else {
-        titleError.value = ""
-    }
-
-    if (courseDescription.isEmpty() || courseDescription.isBlank() || courseDescription.length < 2) {
-        descriptionError.value = "Description Invalid"
-        return false
-    } else {
-        descriptionError.value = ""
-    }
-    return true
-}
+//fun validateData(
+//    courseTitle: String,
+//    titleError: MutableState<String>,
+//    courseDescription: String,
+//    descriptionError: MutableState<String>
+//): Boolean {
+//    if (courseTitle.isEmpty() || courseTitle.isBlank() || courseTitle.length < 2) {
+//        titleError.value = "Title Invalid"
+//        return false
+//    } else {
+//        titleError.value = ""
+//    }
+//
+//    if (courseDescription.isEmpty() || courseDescription.isBlank() || courseDescription.length < 2) {
+//        descriptionError.value = "Description Invalid"
+//        return false
+//    } else {
+//        descriptionError.value = ""
+//    }
+//    return true
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

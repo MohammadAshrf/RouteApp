@@ -1,4 +1,4 @@
-package com.example.routeapp.ui.main
+package com.example.routeapp.ui
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -11,8 +11,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -46,21 +48,20 @@ import com.example.routeapp.database.MyDatabase
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class MainActivity : ComponentActivity() {
-    val addCourseLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            fetchCoursesFromDB {
-
-            }
-
-        }
-    }
-
-    fun fetchCoursesFromDB(callback: (List<Courses>) -> Unit) {
-        val courses = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
-        callback(courses)
-    }
+//    val addCourseLauncher = registerForActivityResult(
+//        ActivityResultContracts.StartActivityForResult()
+//    ) { result ->
+//        if (result.resultCode == RESULT_OK) {
+//            fetchCoursesFromDB {
+//            }
+//
+//        }
+//    }
+//
+//    private fun fetchCoursesFromDB(callback: (List<Courses>) -> Unit) {
+//        val courses = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
+//        callback(courses)
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -77,13 +78,13 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf(listOf<Courses>())
                     }
                     newCourses = MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
+
                     val activityLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.StartActivityForResult(),
                         onResult = {
                             if (it.resultCode == RESULT_OK) {
                                 newCourses =
                                     MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
-
                             }
                         }
                     )
@@ -106,11 +107,9 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainContent(
-
     newCourses: List<Courses>,
     callback: () -> Unit,
 ) {
-    val context = LocalContext.current
     Scaffold(
         topBar = {
             RouteTopAppBar(navigationIcon = null, {}, title = "Route App")
@@ -156,11 +155,15 @@ fun MainContent(
                     val item = newCourses[it]
 
                     AsyncImage(
-                        model = Uri.parse(item.picture ?: ""),
-                        contentDescription = ""
+                        model = Uri.parse(item.picture),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .size(150.dp)
+                            .align(alignment = Alignment.CenterHorizontally),
+                        contentScale = ContentScale.FillBounds,
                     )
-                    // 9 -> 5
-                    // part time
+
                     Text(
                         text = item.name,
                         modifier = Modifier
@@ -189,7 +192,6 @@ fun MainContent(
 @Composable
 fun GreetingPreview() {
     RouteAppTheme {
-        val lazyListState = rememberLazyListState()
         MainContent(listOf()) {}
     }
 }

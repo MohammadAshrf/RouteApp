@@ -1,11 +1,11 @@
 package com.example.routeapp
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,8 +23,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,18 +36,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.routeapp.database.Courses
 import com.example.routeapp.database.MyDatabase
+import com.example.routeapp.ui.main.RouteTopAppBar
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class AddCourseActivity : ComponentActivity() {
 
     private lateinit var coursesItems: List<Courses>
 
-    private val addCourseLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK)
-            coursesItems = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
-    }
 
     // Registers a photo picker activity launcher in single-select mode.
     private val pickMedia =
@@ -65,20 +62,42 @@ class AddCourseActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             RouteAppTheme {
+                var imagePath by remember {
+                    mutableStateOf("")
+                }
+                val galleryLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.PickVisualMedia(),
+                    onResult = {
+                        if (it != null) {
+                            Log.e("PhotoPicker", "Selected URI: $it")
+                            imagePath = it.toString() ?: ""
+                        } else {
+                            Log.e("PhotoPicker", "No media selected")
+                        }
+                    }
+                )
+
+                // API Call open New Thread
+                // suspend
                 // A surface container using the 'background' color from the theme
                 AddCourseContent(
                     openGalleryClick = {
-                        pickMedia.launch(PickVisualMediaRequest())
+                        galleryLauncher.launch(PickVisualMediaRequest())
+                        // hiltViewModel()
                     },
                     onNavigationClick = { finish() },
                     onSaveCourseClick = {
-                        addCourseLauncher.launch(
-                            Intent(
-                                this, MainActivity::class.java
-                            )
-                        )
+                        // splash -> main Activity ->  add course Activity
+                        /* addCourseLauncher.launch(
+                             Intent(
+                                 this, MainActivity::class.java
+                             )
+                         )
+ */
+                        setResult(RESULT_OK)
                         finish()
-                    }
+                    },
+                    imagePath = imagePath
                 )
             }
         }
@@ -91,7 +110,8 @@ class AddCourseActivity : ComponentActivity() {
 fun AddCourseContent(
     onNavigationClick: () -> Unit,
     openGalleryClick: () -> Unit,
-    onSaveCourseClick: () -> Unit
+    onSaveCourseClick: () -> Unit,
+    imagePath: String
 ) {
 
     Scaffold(
@@ -124,6 +144,7 @@ fun AddCourseContent(
             val picture = remember {
                 mutableStateOf("")
             }
+            picture.value = imagePath
 
             val context = LocalContext.current
 
@@ -232,6 +253,14 @@ fun RouteButton(
 @Composable
 fun GreetingPreview3() {
     RouteAppTheme {
-        AddCourseContent(onNavigationClick = {}, openGalleryClick = {}, onSaveCourseClick = {})
+        AddCourseContent(
+            onNavigationClick = {},
+            openGalleryClick = {},
+            onSaveCourseClick = {},
+            imagePath = ""
+
+            // Glide - Coil
+            // fetch local images
+        )
     }
 }

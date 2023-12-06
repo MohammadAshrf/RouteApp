@@ -1,16 +1,18 @@
-package com.example.routeapp
+package com.example.routeapp.ui.main
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,11 +38,29 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.example.routeapp.AddCourseActivity
+import com.example.routeapp.R
 import com.example.routeapp.database.Courses
 import com.example.routeapp.database.MyDatabase
 import com.example.routeapp.ui.theme.RouteAppTheme
 
 class MainActivity : ComponentActivity() {
+    val addCourseLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            fetchCoursesFromDB {
+
+            }
+
+        }
+    }
+
+    fun fetchCoursesFromDB(callback: (List<Courses>) -> Unit) {
+        val courses = MyDatabase.getInstance(this).getCoursesDao().getAllCourses()
+        callback(courses)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,11 +72,28 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-//                    val lazyListState = rememberLazyListState()
+                    val context = LocalContext.current
+                    var newCourses by remember {
+                        mutableStateOf(listOf<Courses>())
+                    }
+                    newCourses = MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
+                    val activityLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.StartActivityForResult(),
+                        onResult = {
+                            if (it.resultCode == RESULT_OK) {
+                                newCourses =
+                                    MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
+
+                            }
+                        }
+                    )
+
                     MainContent(
+                        newCourses,
                         callback = {
                             val intent = Intent(this, AddCourseActivity::class.java)
-                            startActivity(intent)
+                            activityLauncher.launch(intent)
+                            //startActivity(intent)
                         }
                     )
                 }
@@ -68,7 +105,11 @@ class MainActivity : ComponentActivity() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainContent(callback: () -> Unit) {
+fun MainContent(
+
+    newCourses: List<Courses>,
+    callback: () -> Unit,
+) {
     val context = LocalContext.current
     Scaffold(
         topBar = {
@@ -90,22 +131,21 @@ fun MainContent(callback: () -> Unit) {
                 )
             }
         },
+        //Exo Player
+
         floatingActionButtonPosition = FabPosition.End
     ) {
-        var coursesItems by remember {
-            mutableStateOf(listOf<Courses>())
-        }
-        // Fetch initial data from the database
-        coursesItems = MyDatabase.getInstance(context).getCoursesDao().getAllCourses()
 
+
+        // Fetch initial data from the database
 
         LazyColumn(
-            Modifier.padding(
+
+            modifier = Modifier.padding(
                 top = it.calculateTopPadding()
             )
-//            state = LazyListState()
         ) {
-            items(coursesItems.size) {
+            items(newCourses.size) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,7 +153,14 @@ fun MainContent(callback: () -> Unit) {
                             vertical = 8.dp, horizontal = 16.dp
                         ), shape = CardDefaults.outlinedShape
                 ) {
-                    val item = coursesItems[it]
+                    val item = newCourses[it]
+
+                    AsyncImage(
+                        model = Uri.parse(item.picture ?: ""),
+                        contentDescription = ""
+                    )
+                    // 9 -> 5
+                    // part time
                     Text(
                         text = item.name,
                         modifier = Modifier
@@ -128,7 +175,7 @@ fun MainContent(callback: () -> Unit) {
                             .padding(vertical = 8.dp),
                         textAlign = TextAlign.Center
                     )
-                 
+
 
                 }
             }
@@ -142,7 +189,8 @@ fun MainContent(callback: () -> Unit) {
 @Composable
 fun GreetingPreview() {
     RouteAppTheme {
-        MainContent {}
+        val lazyListState = rememberLazyListState()
+        MainContent(listOf()) {}
     }
 }
 

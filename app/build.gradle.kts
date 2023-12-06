@@ -73,7 +73,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     //Room
     val room_version = "2.6.1"
-
-    implementation ("androidx.room:room-runtime:$room_version")
+    // Coil
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("androidx.room:room-runtime:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
 }

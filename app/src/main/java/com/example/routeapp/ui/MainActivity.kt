@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
 //        ActivityResultContracts.StartActivityForResult()
 //    ) { result ->
 //        if (result.resultCode == RESULT_OK) {
-//            fetchCoursesFromDB {
+//
 //            }
 //
 //        }
